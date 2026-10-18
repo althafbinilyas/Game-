@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Coin Collector - Fun 2D Cartoon Arcade Game</title>
+    <meta name="description" content="Coin Collector: A vibrant, colorful 2D browser arcade game. Collect gold coins, dodge grumpy enemies, survive traps, and beat all 3 challenging levels!">
+    
+    <!-- Google Fonts for playful cartoon typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700;900&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="game-wrapper">
+        <!-- Top Navigation / High Score Bar -->
+        <header class="top-bar">
+            <div class="logo-group">
+                <span class="game-logo-icon">🪙</span>
+                <h1 class="game-title">Coin Collector</h1>
+            </div>
+            
+            <div class="top-controls">
+                <div class="high-score-badge" title="Saved High Score">
+                    🏆 Best: <span id="highScoreValue">0</span>
+                </div>
+                <button id="sfxToggle" class="icon-toggle-btn" aria-label="Toggle Sound Effects">🔊 SFX: ON</button>
+                <button id="musicToggle" class="icon-toggle-btn" aria-label="Toggle Music">🎵 Music: ON</button>
+            </div>
+        </header>
+
+        <!-- Main Game Container with Aspect Ratio Lock -->
+        <main id="gameContainer" class="game-container">
+            <!-- HUD Overlay -->
+            <div id="hud" class="hud-bar">
+                <div class="hud-item hud-level">
+                    <span id="levelBadge" class="level-pill">Level 1: Sunny Meadow</span>
+                </div>
+
+                <div class="hud-item hud-score">
+                    <span class="hud-icon">⭐</span>
+                    <span class="hud-label">Score:</span>
+                    <span id="scoreValue" class="hud-num">0</span>
+                </div>
+
+                <div class="hud-item hud-coins">
+                    <span class="hud-icon">🪙</span>
+                    <span class="hud-label">Coins:</span>
+                    <span class="hud-num"><span id="coinsValue">0</span>/<span id="coinsTotal">15</span></span>
+                </div>
+
+                <div class="hud-item hud-timer">
+                    <div class="timer-label-row">
+                        <span class="hud-icon">⏳</span>
+                        <span class="hud-label">Time:</span>
+                        <span id="timerValue" class="hud-num">60s</span>
+                    </div>
+                    <div class="timer-bar-track">
+                        <div id="timerProgress" class="timer-bar-fill"></div>
+                    </div>
+                </div>
+
+                <div class="hud-item hud-lives">
+                    <div id="livesContainer" class="lives-hearts">
+                        <span class="heart filled">❤️</span>
+                        <span class="heart filled">❤️</span>
+                        <span class="heart filled">❤️</span>
+                    </div>
+                </div>
+
+                <div class="hud-actions">
+                    <button id="pauseBtn" class="hud-btn" title="Pause Game (P or Esc)">⏸️</button>
+                    <button id="restartBtnHUD" class="hud-btn" title="Restart Game">🔄</button>
+                </div>
+            </div>
+
+            <!-- HTML5 2D Canvas -->
+            <canvas id="gameCanvas" width="960" height="600"></canvas>
+
+            <!-- Start / Title Screen Overlay -->
+            <section id="startScreen" class="overlay-modal modal-start">
+                <div class="modal-card">
+                    <div class="mascot-badge">🐹✨</div>
+                    <h2 class="modal-title">Welcome to Coin Collector!</h2>
+                    <p class="modal-subtitle">Guide Pip to gather all the golden coins before the 60-second timer runs out!</p>
+                    
+                    <div class="features-summary">
+                        <div class="feature-tag">🪙 3 Exciting Levels</div>
+                        <div class="feature-tag">👾 Slimes & Bouncing Bats</div>
+                        <div class="feature-tag">💎 Bonus Star Gems</div>
+                        <div class="feature-tag">⏳ 60s Countdown Rush</div>
+                    </div>
+
+                    <div class="instruction-box">
+                        <div class="key-guide">
+                            <span class="key-pill">W</span>
+                            <span class="key-pill">A</span>
+                            <span class="key-pill">S</span>
+                            <span class="key-pill">D</span> or
+                            <span class="key-pill">⬆️</span>
+                            <span class="key-pill">⬅️</span>
+                            <span class="key-pill">⬇️</span>
+                            <span class="key-pill">➡️</span> to Move
+                        </div>
+                        <div class="mobile-note">📱 On mobile/tablet, use the on-screen D-Pad below!</div>
+                    </div>
+
+                    <button id="startBtn" class="btn btn-primary btn-pulse">▶️ Start Game</button>
+                </div>
+            </section>
+
+            <!-- Pause Modal -->
+            <section id="pauseScreen" class="overlay-modal modal-pause hidden">
+                <div class="modal-card">
+                    <h2 class="modal-title">⏸️ Game Paused</h2>
+                    <p class="modal-subtitle">Take a breather, Pip is resting!</p>
+                    <div class="modal-buttons">
+                        <button id="resumeBtn" class="btn btn-primary">▶️ Resume</button>
+                        <button id="restartBtnPause" class="btn btn-secondary">🔄 Restart Level</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Level Clear Modal -->
+            <section id="levelClearScreen" class="overlay-modal modal-clear hidden">
+                <div class="modal-card">
+                    <div class="victory-icon">🎉</div>
+                    <h2 class="modal-title">Stage Cleared!</h2>
+                    <p id="levelClearNextName" class="modal-subtitle">Get ready for the next adventure!</p>
+                    <button id="nextLevelBtn" class="btn btn-primary btn-pulse">🚀 Continue to Next Stage</button>
+                </div>
+            </section>
+
+            <!-- Game Over Modal -->
+            <section id="gameOverScreen" class="overlay-modal modal-gameover hidden">
+                <div class="modal-card">
+                    <div class="gameover-icon">💥</div>
+                    <h2 class="modal-title">Game Over!</h2>
+                    <p class="modal-subtitle">Don't give up! Try again to beat the high score.</p>
+                    <div class="score-summary-pill">
+                        Final Score: <span id="finalScoreOver" class="highlight-text">0 pts</span>
+                    </div>
+                    <button id="restartBtnOver" class="btn btn-primary btn-pulse">🔄 Try Again</button>
+                </div>
+            </section>
+
+            <!-- You Win Modal -->
+            <section id="winScreen" class="overlay-modal modal-win hidden">
+                <div class="modal-card">
+                    <div class="win-crown">👑</div>
+                    <h2 class="modal-title">YOU WON!</h2>
+                    <p class="modal-subtitle">You conquered all 3 levels and collected every treasure!</p>
+                    <div id="starsRating" class="stars-row">⭐⭐⭐</div>
+                    <div class="win-stats">
+                        <div class="stat-box">
+                            <span class="stat-label">Total Score</span>
+                            <span id="finalScoreWin" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Performance</span>
+                            <span id="winTimeLeft" class="stat-value">Speedy Runner</span>
+                        </div>
+                    </div>
+                    <button id="restartBtnWin" class="btn btn-primary btn-pulse">🏆 Play Again</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Responsive Mobile / Touch D-Pad Controls -->
+        <div id="touchControls" class="mobile-dpad-container">
+            <div class="dpad-grid">
+                <button class="dpad-btn dpad-up" data-key="ArrowUp" aria-label="Up">▲</button>
+                <div class="dpad-middle-row">
+                    <button class="dpad-btn dpad-left" data-key="ArrowLeft" aria-label="Left">◀</button>
+                    <div class="dpad-center-hub">●</div>
+                    <button class="dpad-btn dpad-right" data-key="ArrowRight" aria-label="Right">▶</button>
+                </div>
+                <button class="dpad-btn dpad-down" data-key="ArrowDown" aria-label="Down">▼</button>
+            </div>
+        </div>
+
+        <!-- Desktop Controls Hint Footer -->
+        <footer class="game-footer">
+            <span>Controls: <strong>WASD</strong> or <strong>Arrow Keys</strong> to move &bull; <strong>P / ESC</strong> to pause</span>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/audio.js"></script>
+    <script src="js/particles.js"></script>
+    <script src="js/levels.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
